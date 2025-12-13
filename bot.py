@@ -183,6 +183,23 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"บช ถอนคงเหลือ {data['balance']} บ."
         )
         return
+    # =========================
+    # 2️⃣ เลข 10–12 หลัก → ส่งไปอีกคน + ปุ่ม copy
+    # =========================
+    if re.fullmatch(r"\d{10,12}", text):
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📋 คัดลอก", callback_data=f"copy:{text}")]
+        ])
+
+        await context.bot.send_message(
+            chat_id=COPY_TARGET_USER_ID,
+            text=f"📥 มีเลขใหม่\n\n{text}",
+            reply_markup=keyboard
+        )
+        return
+    # =========================
+    # 3️⃣ เลขถอนปกติ
+    # =========================
     if not text.isdigit():
         return
 
@@ -268,7 +285,6 @@ def main():
 
     app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
     app.add_handler(CallbackQueryHandler(copy_button_handler))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, forward_number_with_copy))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
     print("BOT is running...")
@@ -278,6 +294,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

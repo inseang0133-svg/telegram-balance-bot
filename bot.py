@@ -9,7 +9,7 @@ from telegram.ext import (
     filters
 )
 
-
+import os
 
 TOKEN = os.getenv("TOKEN")
 TARGET_CHAT_ID = int(os.getenv("TARGET_CHAT_ID"))
@@ -212,3 +212,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+

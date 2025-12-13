@@ -1,0 +1,210 @@
+import json
+import os
+from telegram import Update, InputMediaPhoto
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    MessageHandler,
+    CommandHandler,
+    filters
+)
+
+TOKEN = "7734298487:AAEbHPSjERPVfedQyYh0quwbjP2Za1rymzc"
+TARGET_CHAT_ID = -5071529115
+
+DATA_FILE = "balance.json"
+
+
+# ------------------------------
+#  โหลด / บันทึก ยอดคงเหลือ
+# ------------------------------
+def load_balance():
+    if not os.path.exists(DATA_FILE):
+        return {"balance": 0, "last_withdraw": 0}
+
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_balance(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
+
+
+# ------------------------------
+#   คำสั่ง /reset
+# ------------------------------
+async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    # ❌ ถ้าอยู่ใน TARGET CHAT → ไม่ทำอะไร
+    if update.effective_chat.id == TARGET_CHAT_ID:
+        return
+
+    data = load_balance()
+    data["balance"] = 0
+    save_balance(data)
+
+    await update.message.reply_text(
+        f"ยอดถอน {data['last_withdraw']} บ.\nบช ถอนคงเหลือ 0 บ."
+    )
+
+
+# ------------------------------
+#   คำสั่ง /input
+# ------------------------------
+async def input_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    # ❌ ไม่ทำงานในกลุ่ม TARGET
+    if update.effective_chat.id == TARGET_CHAT_ID:
+        return
+
+    data = load_balance()
+
+    try:
+        amount = int(context.args[0])
+    except:
+        await update.message.reply_text("ใช้รูปแบบ: /input 10000")
+        return
+
+    data["balance"] += amount
+    save_balance(data)
+
+    await update.message.reply_text(
+        f"ยอดถอน {data['last_withdraw']} บ.\nบช ถอนคงเหลือ {data['balance']} บ."
+    )
+
+
+# ------------------------------
+#   /cash → ล้างรูปทั้งหมด
+# ------------------------------
+async def cash_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if update.effective_chat.id == TARGET_CHAT_ID:
+        return
+
+    context.user_data["photo_buffer"] = []
+    await update.message.reply_text("✔ ล้างรูปทั้งหมดแล้ว")
+
+
+# ------------------------------
+#   /del → ลบรูปล่าสุด 1 รูป
+# ------------------------------
+async def del_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    if update.effective_chat.id == TARGET_CHAT_ID:
+        return
+
+    buffer = context.user_data.get("photo_buffer", [])
+
+    if not buffer:
+        await update.message.reply_text("❌ ไม่มีรูปใน buffer")
+        return
+
+    buffer.pop()  # ลบรูปล่าสุด
+    context.user_data["photo_buffer"] = buffer
+
+    await update.message.reply_text("✔ ลบรูปล่าสุด 1 รูป")
+
+
+# ------------------------------
+#   รับข้อความ → ประมวลผลยอด
+# ------------------------------
+async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    # ❌ ถ้าเป็นข้อความในกลุ่ม TARGET CHAT → ไม่ต้องทำอะไรเลย
+    if update.effective_chat.id == TARGET_CHAT_ID:
+        return
+
+    text = update.message.text
+
+    if not text.isdigit():
+        return
+
+    amount = int(text)
+    data = load_balance()
+
+    data["last_withdraw"] = amount
+    data["balance"] -= amount
+    if data["balance"] < 0:
+        data["balance"] = 0
+
+    save_balance(data)
+
+    reply_msg = (
+        f"ยอดถอน {amount} บ.\n"
+        f"บช ถอนคงเหลือ {data['balance']} บ."
+    )
+
+    context.user_data["last_reply"] = reply_msg
+
+    await update.message.reply_text(reply_msg)
+
+
+# ------------------------------
+#   รับรูป → เก็บ buffer 3 รูป
+# ------------------------------
+async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    # ❌ ถ้าเป็นรูปในกลุ่ม TARGET CHAT → ไม่ต้องทำอะไร
+    if update.effective_chat.id == TARGET_CHAT_ID:
+        return
+
+    # สร้าง buffer ถ้ายังไม่มี
+    if "photo_buffer" not in context.user_data:
+        context.user_data["photo_buffer"] = []
+
+    buffer = context.user_data["photo_buffer"]
+
+    # เก็บ file_id ของรูปใหญ่สุด
+    file_id = update.message.photo[-1].file_id
+    buffer.append(file_id)
+
+    # ได้ครบ 3 รูปหรือยัง?
+    if len(buffer) < 3:
+        await update.message.reply_text(f"รูปที่ {len(buffer)}/3")
+        return
+
+    # ครบ 3 รูปแล้ว ส่งไปยังกลุ่มเป้าหมาย
+    last_reply = context.user_data.get("last_reply", "ไม่มีข้อความล่าสุด")
+
+    media_group = [
+        InputMediaPhoto(media=buffer[0]),
+        InputMediaPhoto(media=buffer[1]),
+        InputMediaPhoto(media=buffer[2])
+    ]
+
+    sent_msgs = await context.bot.send_media_group(
+        chat_id=TARGET_CHAT_ID,
+        media=media_group
+    )
+
+    await context.bot.send_message(
+        chat_id=TARGET_CHAT_ID,
+        text=last_reply,
+        reply_to_message_id=sent_msgs[0].message_id
+    )
+
+    # ล้าง buffer
+    context.user_data["photo_buffer"] = []
+
+
+# ------------------------------
+#   MAIN
+# ------------------------------
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("reset", reset_command))
+    app.add_handler(CommandHandler("input", input_command))
+    app.add_handler(CommandHandler("cash", cash_command))
+    app.add_handler(CommandHandler("del", del_command))
+
+    app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
+
+    print("BOT is running...")
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()

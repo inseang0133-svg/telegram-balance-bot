@@ -67,9 +67,10 @@ async def forward_number_with_copy(update: Update, context: ContextTypes.DEFAULT
     )
 async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
+    await query.answer("กดค้างที่ตัวเลขเพื่อคัดลอก 📋")
 
-    if not is_admin(query):
+    user_id = query.from_user.id
+    if user_id not in ADMIN_IDS and user_id != COPY_TARGET_USER_ID:
         return
 
     if not query.data.startswith("copy:"):
@@ -77,8 +78,17 @@ async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     number = query.data.split("copy:")[1]
 
-    # ส่งเลขซ้ำ → Telegram จะมีปุ่ม Copy ให้อัตโนมัติ
-    await query.message.reply_text(number)
+    # 1️⃣ ส่งเลขซ้ำ → Telegram จะมีปุ่ม Copy ให้
+    await query.message.reply_text(
+        f"👇 กดค้างที่ตัวเลขเพื่อคัดลอก\n\n{number}"
+    )
+
+    # 2️⃣ เปลี่ยนปุ่มเป็น "คัดลอกแล้ว"
+    new_keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ คัดลอกแล้ว", callback_data="copied")]
+    ])
+
+    await query.edit_message_reply_markup(reply_markup=new_keyboard)
 # ------------------------------
 #   คำสั่ง /reset
 # ------------------------------
@@ -294,6 +304,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

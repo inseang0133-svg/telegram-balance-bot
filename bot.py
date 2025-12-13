@@ -78,10 +78,7 @@ async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     number = query.data.split("copy:")[1]
 
-    # 1️⃣ ส่งเลขซ้ำ → Telegram จะมีปุ่ม Copy ให้
-    await query.message.reply_text(
-        f"👇 กดค้างที่ตัวเลขเพื่อคัดลอก\n\n{number}"
-    )
+
 
     # 2️⃣ เปลี่ยนปุ่มเป็น "คัดลอกแล้ว"
     new_keyboard = InlineKeyboardMarkup([
@@ -304,6 +301,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

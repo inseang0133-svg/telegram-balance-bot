@@ -1,5 +1,7 @@
 import json
 import os
+import re
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from keep_alive import keep_alive
 keep_alive()
 from telegram import Update, InputMediaPhoto
@@ -15,6 +17,7 @@ ADMIN_IDS = [
     # ถ้ามีหลายคน เพิ่มได้ เช่น
     # 987654321,
 ]
+COPY_TARGET_USER_ID = 8580689960  # ← Telegram User ID คนที่จะรับเลข
 
 TOKEN = os.getenv("TOKEN")
 TARGET_CHAT_ID = int(os.getenv("TARGET_CHAT_ID"))
@@ -37,7 +40,30 @@ def save_balance(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
 
+async def forward_number_with_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # จำกัดเฉพาะ ADMIN
+    if not is_admin(update):
+        return
 
+    # ไม่ทำงานใน TARGET CHAT
+    if update.effective_chat.id == TARGET_CHAT_ID:
+        return
+
+    text = update.message.text.strip()
+
+    # ตรวจสอบเลข 10–12 หลัก
+    if not re.fullmatch(r"\d{10,12}", text):
+        return
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📋 คัดลอก", copy_text=text)]
+    ])
+
+    await context.bot.send_message(
+        chat_id=COPY_TARGET_USER_ID,
+        text=f"📥 มีเลขใหม่\n\n{text}",
+        reply_markup=keyboard
+    )
 # ------------------------------
 #   คำสั่ง /reset
 # ------------------------------
@@ -226,6 +252,7 @@ def main():
     app.add_handler(CommandHandler("del", del_command))
 
     app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, forward_number_with_copy))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
     print("BOT is running...")
@@ -235,6 +262,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

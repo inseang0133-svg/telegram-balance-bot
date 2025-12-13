@@ -8,16 +8,18 @@ from telegram.ext import (
     CommandHandler,
     filters
 )
-
-import os
+ADMIN_IDS = [
+    1759155991  # ← ใส่ Telegram User ID ของคุณ
+    # ถ้ามีหลายคน เพิ่มได้ เช่น
+    # 987654321,
+]
 
 TOKEN = os.getenv("TOKEN")
 TARGET_CHAT_ID = int(os.getenv("TARGET_CHAT_ID"))
-
-
 DATA_FILE = "balance.json"
 
-
+def is_admin(update: Update) -> bool:
+    return update.effective_user.id in ADMIN_IDS
 # ------------------------------
 #  โหลด / บันทึก ยอดคงเหลือ
 # ------------------------------
@@ -56,7 +58,8 @@ async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #   คำสั่ง /input
 # ------------------------------
 async def input_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    if not is_admin(update):
+        return  # ไม่ใช่ admin → เงียบ
     # ❌ ไม่ทำงานในกลุ่ม TARGET
     if update.effective_chat.id == TARGET_CHAT_ID:
         return
@@ -81,7 +84,8 @@ async def input_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #   /cash → ล้างรูปทั้งหมด
 # ------------------------------
 async def cash_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    if not is_admin(update):
+        return  # ไม่ใช่ admin → เงียบ
     if update.effective_chat.id == TARGET_CHAT_ID:
         return
 
@@ -93,7 +97,8 @@ async def cash_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #   /del → ลบรูปล่าสุด 1 รูป
 # ------------------------------
 async def del_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    if not is_admin(update):
+        return  # ไม่ใช่ admin → เงียบ
     if update.effective_chat.id == TARGET_CHAT_ID:
         return
 
@@ -113,7 +118,8 @@ async def del_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #   รับข้อความ → ประมวลผลยอด
 # ------------------------------
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    if not is_admin(update):
+        return  # ไม่ใช่ admin → เงียบ
     # ❌ ถ้าเป็นข้อความในกลุ่ม TARGET CHAT → ไม่ต้องทำอะไรเลย
     if update.effective_chat.id == TARGET_CHAT_ID:
         return
@@ -147,7 +153,8 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #   รับรูป → เก็บ buffer 3 รูป
 # ------------------------------
 async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    if not is_admin(update):
+        return  # ไม่ใช่ admin → เงียบ
     # ❌ ถ้าเป็นรูปในกลุ่ม TARGET CHAT → ไม่ต้องทำอะไร
     if update.effective_chat.id == TARGET_CHAT_ID:
         return
@@ -212,4 +219,5 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 

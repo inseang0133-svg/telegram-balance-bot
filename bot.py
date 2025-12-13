@@ -9,8 +9,11 @@ from telegram.ext import (
     filters
 )
 
-TOKEN = "7734298487:AAEbHPSjERPVfedQyYh0quwbjP2Za1rymzc"
-TARGET_CHAT_ID = -5071529115
+
+
+TOKEN = os.getenv("TOKEN")
+TARGET_CHAT_ID = int(os.getenv("TARGET_CHAT_ID"))
+
 
 DATA_FILE = "balance.json"
 
@@ -207,4 +210,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()

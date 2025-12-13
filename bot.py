@@ -62,7 +62,7 @@ async def forward_number_with_copy(update: Update, context: ContextTypes.DEFAULT
 
     await context.bot.send_message(
         chat_id=COPY_TARGET_USER_ID,
-        text=f"📥 มีเลขใหม่\n\n{text}",
+        text=f"{text}",
         reply_markup=keyboard
     )
 async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -301,6 +301,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

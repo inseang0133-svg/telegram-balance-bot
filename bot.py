@@ -42,7 +42,8 @@ def save_balance(data):
 #   คำสั่ง /reset
 # ------------------------------
 async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    if not is_admin(update):
+        return  # ไม่ใช่ admin → เงียบ
     # ❌ ถ้าอยู่ใน TARGET CHAT → ไม่ทำอะไร
     if update.effective_chat.id == TARGET_CHAT_ID:
         return
@@ -234,6 +235,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

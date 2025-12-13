@@ -66,19 +66,13 @@ async def input_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_chat.id == TARGET_CHAT_ID:
         return
 
-    data = load_balance()
-
-    try:
-        amount = int(context.args[0])
-    except:
-        await update.message.reply_text("ใช้รูปแบบ: /input 10000")
-        return
-
-    data["balance"] += amount
-    save_balance(data)
+    # ตั้งสถานะว่ากำลังรอจำนวนเงิน
+    context.user_data["waiting_input"] = True
 
     await update.message.reply_text(
-        f"ยอดถอน {data['last_withdraw']} บ.\nบช ถอนคงเหลือ {data['balance']} บ."
+        "กรุณาใส่จำนวนเงินที่ต้องการเพิ่ม\n"
+        "พิมพ์เป็นตัวเลขอย่างเดียว เช่น\n"
+        "10000"
     )
 
 
@@ -127,7 +121,26 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     text = update.message.text
+    # ✅ กรณีอยู่ในโหมดรอ /input
+    if context.user_data.get("waiting_input"):
+        if not text.isdigit():
+            await update.message.reply_text("❌ กรุณาพิมพ์เป็นตัวเลขเท่านั้น")
+            return
 
+        amount = int(text)
+        data = load_balance()
+        data["balance"] += amount
+        save_balance(data)
+
+        # ปิดโหมดรอ
+        context.user_data["waiting_input"] = False
+
+        await update.message.reply_text(
+            f"✅ เพิ่มยอดสำเร็จ\n"
+            f"ยอดถอน {data['last_withdraw']} บ.\n"
+            f"บช ถอนคงเหลือ {data['balance']} บ."
+        )
+        return
     if not text.isdigit():
         return
 
@@ -221,6 +234,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

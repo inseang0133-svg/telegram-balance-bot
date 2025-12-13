@@ -65,7 +65,7 @@ async def forward_number_with_copy(update: Update, context: ContextTypes.DEFAULT
         text=f"📥 มีเลขใหม่\n\n{text}",
         reply_markup=keyboard
     )
-    async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
@@ -278,6 +278,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

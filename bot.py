@@ -2,6 +2,10 @@ import json
 import os
 from keep_alive import keep_alive
 keep_alive()
+from web import run
+from threading import Thread
+
+Thread(target=run).start()
 from telegram import Update, InputMediaPhoto
 from telegram.ext import (
     ApplicationBuilder,
@@ -221,6 +225,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

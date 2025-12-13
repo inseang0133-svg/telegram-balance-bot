@@ -1,7 +1,8 @@
 import json
 import os
-import re
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackQueryHandler
+import re
 from keep_alive import keep_alive
 keep_alive()
 from telegram import Update, InputMediaPhoto
@@ -56,7 +57,7 @@ async def forward_number_with_copy(update: Update, context: ContextTypes.DEFAULT
         return
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📋 คัดลอก", copy_text=text)]
+        [InlineKeyboardButton("📋 คัดลอก", callback_data=f"copy:{text}")]
     ])
 
     await context.bot.send_message(
@@ -64,6 +65,20 @@ async def forward_number_with_copy(update: Update, context: ContextTypes.DEFAULT
         text=f"📥 มีเลขใหม่\n\n{text}",
         reply_markup=keyboard
     )
+    async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if not is_admin(query):
+        return
+
+    if not query.data.startswith("copy:"):
+        return
+
+    number = query.data.split("copy:")[1]
+
+    # ส่งเลขซ้ำ → Telegram จะมีปุ่ม Copy ให้อัตโนมัติ
+    await query.message.reply_text(number)
 # ------------------------------
 #   คำสั่ง /reset
 # ------------------------------
@@ -252,6 +267,7 @@ def main():
     app.add_handler(CommandHandler("del", del_command))
 
     app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+    app.add_handler(CallbackQueryHandler(copy_button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, forward_number_with_copy))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
@@ -262,6 +278,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

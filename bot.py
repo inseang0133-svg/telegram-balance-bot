@@ -67,7 +67,7 @@ async def forward_number_with_copy(update: Update, context: ContextTypes.DEFAULT
     )
 async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer("กดค้างที่ตัวเลขเพื่อคัดลอก 📋")
+    await query.answer("กดค้างที่ตัวเลขเพื่อคัดลอก0133 📋")
 
     user_id = query.from_user.id
     if user_id not in ADMIN_IDS and user_id != COPY_TARGET_USER_ID:
@@ -79,7 +79,7 @@ async def copy_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     number = query.data.split("copy:")[1]
 # 1️⃣ ส่งเลขซ้ำ → Telegram จะมีปุ่ม Copy ให้
     await query.message.reply_text(
-        f"👇 กดค้างที่ตัวเลขเพื่อคัดลอก\n\n{number}"
+        f"{number}"
     )
 
 
@@ -304,6 +304,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

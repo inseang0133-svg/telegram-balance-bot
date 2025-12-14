@@ -276,18 +276,20 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
     print("BOT is running...")
+    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
     app.run_webhook(
-    listen="0.0.0.0",
-    port=10000,
-    url_path=TOKEN,
-    webhook_url=f"{WEBHOOK_URL}/{TOKEN}"
-)
+        listen="0.0.0.0",
+        port=10000,
+        webhook_url=f"{WEBHOOK_URL}/{TOKEN}",
+    )
 
 
 
 if __name__ == "__main__":
 
     main()
+
 
 
 

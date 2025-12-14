@@ -3,8 +3,7 @@ import os
 import re
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
-from keep_alive import keep_alive
-keep_alive()
+
 from telegram import Update, InputMediaPhoto
 from telegram.ext import (
     ApplicationBuilder,
@@ -280,7 +279,7 @@ def main():
 
     app.run_webhook(
         listen="0.0.0.0",
-        port=10000,
+        port=int(os.environ.get("PORT", 10000)),
         webhook_url=f"{WEBHOOK_URL}/{TOKEN}",
     )
 
@@ -289,6 +288,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

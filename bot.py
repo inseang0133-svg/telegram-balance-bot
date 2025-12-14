@@ -271,7 +271,7 @@ def main():
     app.add_handler(CommandHandler("del", del_command))
 
     app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
-    app.add_handler(CallbackQueryHandler(copy_button_handler))
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
     print("BOT is running...")
@@ -281,6 +281,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 

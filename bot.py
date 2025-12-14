@@ -21,6 +21,7 @@ ADMIN_IDS = [
 COPY_TARGET_USER_ID = 8580689960  # ← Telegram User ID คนที่จะรับเลข
 
 TOKEN = os.getenv("TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 TARGET_CHAT_ID = int(os.getenv("TARGET_CHAT_ID"))
 DATA_FILE = "balance.json"
 
@@ -287,6 +288,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
